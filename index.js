@@ -1,5 +1,6 @@
 var riot = require('riot-compiler'),
     loaderUtils = require('loader-utils'),
+    progeny = require('progeny'),
     REQUIRE_RIOT = 'var riot = require("riot");\n\n';
 
 module.exports = function (source) {
@@ -27,7 +28,12 @@ module.exports = function (source) {
   });
 
   try {
-    return REQUIRE_RIOT + riot.compile(content, options, this.resourcePath);
+    var loader = this;
+    var dependencies = progeny.Sync()(loader.resourcePath, source);
+    dependencies.forEach(function(file) {
+      loader.addDependency(file);
+    });
+    return REQUIRE_RIOT + riot.compile(content, options, loader.resourcePath);
   } catch (e) {
     if (e instanceof Error) {
       throw e;
